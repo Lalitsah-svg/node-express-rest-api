@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const taskRoutes = require("./routes/taskRoutes");
 const postRoutes = require("./routes/postRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/tasks", taskRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
