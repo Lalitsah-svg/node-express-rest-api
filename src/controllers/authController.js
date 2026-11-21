@@ -1,7 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const users = require("../data/users");
+const {
+  createUser,
+  findUserByEmail,
+  findUserById
+} = require("../models/userModel");
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "development_secret_change_me";
@@ -27,9 +31,7 @@ const signup = async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const existingUser = users.find(
-      (user) => user.email === normalizedEmail
-    );
+    const existingUser = await findUserByEmail(normalizedEmail);
 
     if (existingUser) {
       return res.status(409).json({
@@ -40,18 +42,13 @@ const signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = {
-      id: users.length
-        ? Math.max(...users.map((user) => user.id)) + 1
-        : 1,
-      name: name.trim(),
-      email: normalizedEmail,
-      password: hashedPassword
-    };
+    const newUser = await createUser(
+      name.trim(),
+      normalizedEmail,
+      hashedPassword
+    );
 
-    users.push(newUser);
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "User registered successfully",
       data: {
@@ -61,7 +58,9 @@ const signup = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Signup error:", error.message);
+
+    return res.status(500).json({
       success: false,
       message: "Signup failed"
     });
@@ -82,9 +81,7 @@ const login = async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const user = users.find(
-      (item) => item.email === normalizedEmail
-    );
+    const user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(401).json({
@@ -116,7 +113,7 @@ const login = async (req, res) => {
       }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Login successful",
       token,
@@ -127,7 +124,9 @@ const login = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Login error:", error.message);
+
+    return res.status(500).json({
       success: false,
       message: "Login failed"
     });
@@ -135,26 +134,29 @@ const login = async (req, res) => {
 };
 
 // GET PROFILE
-const getProfile = (req, res) => {
-  const user = users.find(
-    (item) => item.id === req.user.id
-  );
+const getProfile = async (req, res) => {
+  try {
+    const user = await findUserById(req.user.id);
 
-  if (!user) {
-    return res.status(404).json({
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error("Profile error:", error.message);
+
+    return res.status(500).json({
       success: false,
-      message: "User not found"
+      message: "Failed to fetch profile"
     });
   }
-
-  res.status(200).json({
-    success: true,
-    data: {
-      id: user.id,
-      name: user.name,
-      email: user.email
-    }
-  });
 };
 
 module.exports = {
