@@ -13,9 +13,10 @@
     "rest-api",
     "crud"
   ],
-  "author": "Aman Kumar",
+  "author": "Lalit Kumar",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.1.0"
   },

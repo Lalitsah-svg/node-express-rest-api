@@ -1,12 +1,16 @@
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors");
+
 const taskRoutes = require("./routes/taskRoutes");
+const postRoutes = require("./routes/postRoutes");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -17,6 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/tasks", taskRoutes);
+app.use("/api/posts", postRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
